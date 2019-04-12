@@ -21,15 +21,17 @@ import dataaccesslayer.HibernateUtil;
 public class Convert {
 
 	static Connection conn;
-	static final String MYSQL_CONN_URL = "jdbc:mysql://192.168.150.141/mlb?"
+	static final String MYSQL_CONN_URL = "jdbc:mysql://163.11.237.163:3306/mlb?"
     + "verifyServerCertificate=false&useSSL=true&" // PPD
-    + "user=dude&password=password"; 
+    + "user=seth&password=seth";//&serverTimezone=UTC"????? //TODO - fix mysql jdbc string
 
 	public static void main(String[] args) {
 		try {
 			long startTime = System.currentTimeMillis();
 			conn = DriverManager.getConnection(MYSQL_CONN_URL);
 			convertPlayers();
+			//TODO - convert all the others stuff call functions here
+			
 			long endTime = System.currentTimeMillis();
 			long elapsed = (endTime - startTime) / (1000*60);
 			System.out.println("Elapsed time in mins: " + elapsed);
@@ -63,7 +65,7 @@ public class Convert {
 						"throws, " + 
 						"birthCity, " + 
 						"birthState, " + 
-            "birthCountry, " +
+						"birthCountry, " +
 						"debut, " + 
 						"finalGame " +
 						"from Master");

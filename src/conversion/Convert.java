@@ -23,14 +23,13 @@ public class Convert {
 	static Connection conn;
 	static final String MYSQL_CONN_URL = "jdbc:mysql://163.11.237.163:3306/mlb?"
     + "verifyServerCertificate=false&useSSL=true&" // PPD
-    + "user=seth&password=seth";//&serverTimezone=UTC"????? //TODO - fix mysql jdbc string
+    + "user=seth&password=seth";
 
 	public static void main(String[] args) {
 		try {
 			long startTime = System.currentTimeMillis();
 			conn = DriverManager.getConnection(MYSQL_CONN_URL);
 			convertPlayers();
-			//TODO - convert all the others stuff call functions here
 			
 			long endTime = System.currentTimeMillis();
 			long elapsed = (endTime - startTime) / (1000*60);
@@ -48,7 +47,7 @@ public class Convert {
 		HibernateUtil.getSessionFactory().close();
 	}
 		
-	public static void convertPlayers() {
+	public static void convertPlayers() { //add players to teamseason
 		try {
 			PreparedStatement ps = conn.prepareStatement("select " + 
 						"playerID, " + 

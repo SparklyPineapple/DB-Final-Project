@@ -57,6 +57,12 @@ public class Player {
 	Date firstGame;
 	@Column
 	Date lastGame;
+	
+	private Set<TeamSeason> teamSeasons;
+	
+	public void addTeamSeason(TeamSeason s) {
+		teamSeasons.add(s);
+	}	
 
 	// utility function
 	public PlayerSeason getPlayerSeason(Integer year) {

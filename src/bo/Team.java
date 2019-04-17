@@ -68,6 +68,7 @@ public class Team {
 	public String getName() {
 		return name;
 	}
+
 	public void setId(String name) {
 		this.name = name;
 	}

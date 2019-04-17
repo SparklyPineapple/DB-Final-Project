@@ -33,9 +33,9 @@ public class Team {
 	@Column
 	String league;
 	@Column
-	Date yearFounded;
+	Integer yearFounded;
 	@Column
-	Date yearLast;
+	Integer yearLast;
 	
 	
 	// utility function
@@ -69,7 +69,7 @@ public class Team {
 		return name;
 	}
 
-	public void setId(String name) {
+	public void setName(String name) {
 		this.name = name;
 	}
 	
@@ -80,17 +80,17 @@ public class Team {
 		this.league = league;
 	}
 	
-	public Date getYearFounded() {
+	public Integer getYearFounded() {
 		return yearFounded;
 	}
-	public void setYearFounded(Date yearFounded) {
+	public void setYearFounded(Integer yearFounded) {
 		this.yearFounded = yearFounded;
 	}
 	
-	public Date getYearLast() {
+	public Integer getYearLast() {
 		return yearLast;
 	}
-	public void setYearLast(Date yearLast) {
+	public void setYearLast(Integer yearLast) {
 		this.yearLast = yearLast;
 	}
 

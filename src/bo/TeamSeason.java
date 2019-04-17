@@ -15,8 +15,6 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 
-import bo.PlayerSeason.PlayerSeasonId;
-
 @SuppressWarnings("serial")
 @Entity(name = "teamseason")
 public class TeamSeason implements Serializable {
@@ -63,31 +61,43 @@ public class TeamSeason implements Serializable {
 		int rank;
 		@Column
 		int totalAttendance;
-		
+			
 		
 		
 		@ManyToMany(fetch = FetchType.LAZY)
-
 		@JoinTable(name = "teamseasonplayer", 
-
 		   joinColumns={
-
 		     @JoinColumn(name="teamId", insertable = false, updatable = false), 
-
 		     @JoinColumn(name="year",  insertable = false, updatable = false)}, 
-
 		   inverseJoinColumns={
-
 		     @JoinColumn(name="playerId", insertable = false, updatable = false)})
-
 		Set<Player> players = new HashSet<Player>();
 		
 		
+		// utility function
+		public Player getPlayers(Player p) {
+			for (Player pl : players) {
+				if (pl.getId().equals(p.getId())) return pl;
+			}
+			return null;
+		}
+		
+		public void addPlayers(Player p) {
+			players.add(p);
+		}
+
+		public Set<Player> getPlayers() {
+			return players;
+		}
+		
+		public void setPlayers(Set<Player> players) {
+			this.players = players;
+		}	
+
+		
 		// Hibernate needs a default constructor
 		public TeamSeason() {}
-		
-		
-		
+
 		public TeamSeason(Team t, Integer year) {
 			TeamSeasonId tsi = new TeamSeasonId();
 			tsi.team = t;

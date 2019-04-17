@@ -67,9 +67,9 @@ public class Convert {
 						"birthCountry, " +
 						"debut, " + 
 						"finalGame " +
-						"from Master");
+						//"from Master");
 						// for debugging comment previous line, uncomment next line
-						//"from Master where playerID = 'bondsba01' or playerID = 'youklke01';");
+						"from Master where playerID = 'bondsba01' or playerID = 'youklke01';");
 			ResultSet rs = ps.executeQuery();
 			int count=0; // for progress feedback only
 			while (rs.next()) {
@@ -137,16 +137,69 @@ public class Convert {
 				addPositions(p, pid);
 				// players bio collected, now go after stats
 				addSeasons(p, pid);
-				// we can now persist player, and the seasons and stats will cascade
+				
+				
+				
+				//can we do this? or do we need to have a team persist?
+				//java bo are currently set up for team to cascasde team season player.
+				
+				//this is dependent on the queries. 
+				
+				
+				//addTeams(player, playerId)
+				
+				//addTeamSeasons(player, playerId)
+				
+				
+				
+				
+				
+				// we can now persist player, and the seasons and stats will cascade  //HOW DO SEASON AND STATS CASCADE????????? will it casade team and teamseason too??
 				HibernateUtil.persistPlayer(p);
+				
+				
+				
+				
+				
+				
+				
+				
+				
 			}
 			rs.close();
 			ps.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
+		
 	}
+	
+	
+	public static void addTeams(Player p, String pid) {
+		Set<String> positions = new HashSet<String>();
+		try {
+			PreparedStatement ps = conn.prepareStatement("select " +
+					"distinct pos " +
+					"from Fielding " +
+					"where playerID = ?;");
+			ps.setString(1, pid);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				String pos = rs.getString("pos");
+				positions.add(pos);
+			}
+			rs.close();
+			ps.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		p.setPositions(positions);
+		
+	}
+	
+	public static void addTeamSeasons() {
+		
+	}	
 	
 	private static java.util.Date convertIntsToDate(int year, int month, int day) {
 		Calendar c = new GregorianCalendar();

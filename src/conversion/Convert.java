@@ -21,14 +21,14 @@ import dataaccesslayer.HibernateUtil;
 public class Convert {
 
 	static Connection conn;
-	static final String MYSQL_CONN_URL = "jdbc:mysql://163.11.237.163:3306/mlb?"
+	static final String MYSQL_CONN_URL = "jdbc:mysql://163.11.239.17:3306/mlb?"
     + "verifyServerCertificate=false&useSSL=true&" // PPD
     + "user=seth&password=seth";
 
 	public static void main(String[] args) {
 		try {
 			long startTime = System.currentTimeMillis();
-			conn = DriverManager.getConnection(MYSQL_CONN_URL);
+			conn = DriverManager.getConnection(MYSQL_CONN_URL);//HERE
 			convertPlayers();
 			
 			long endTime = System.currentTimeMillis();

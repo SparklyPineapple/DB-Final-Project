@@ -129,6 +129,13 @@ public class HibernateUtil {
 		}
 		return list;
 	}
+
+	//TODO 
+	public static Player retrieveTeamById(Integer id){
+		
+	}
+
+	//TODO public static List<Team> retrieveTeamByName(String nameQuery, Boolean exactMatch)
 	
 	public static boolean persistPlayer(Player p) {
 		Session session = HibernateUtil.getSessionFactory().openSession();

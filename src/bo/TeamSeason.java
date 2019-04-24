@@ -75,7 +75,7 @@ public class TeamSeason implements Serializable {
 		
 		
 		// utility function
-		public Player getPlayers(Player p) {
+		public Player getPlayer(Player p) {
 			for (Player pl : players) {
 				if (pl.getId().equals(p.getId())) return pl;
 			}

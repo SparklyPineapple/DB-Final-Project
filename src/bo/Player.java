@@ -157,7 +157,7 @@ public class Player {
 	}
   
   public String getBirthCountry() {
-		return birthCountry;
+		return this.birthCountry;
 	}
 
 	public void setBirthCountry(String birthCountry) {

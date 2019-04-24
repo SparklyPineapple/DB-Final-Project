@@ -8,73 +8,45 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.spi.Stoppable;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import bo.Player;
 import bo.Team;
-
+import bo.TeamSeason;
 
 public class HibernateUtil {
 
-	private static final SessionFactory sessionFactoryP, sessionFactoryT;
+	private static final SessionFactory sessionFactory;
 
 	static {
 		try {
-			System.out.println("player configuration");
-			
 			Configuration cfg = new Configuration()
 				.addAnnotatedClass(bo.Player.class)
 				.addAnnotatedClass(bo.PlayerSeason.class)
+				.addAnnotatedClass(bo.Team.class)
+				.addAnnotatedClass(bo.TeamSeason.class)
 				.addAnnotatedClass(bo.BattingStats.class)
 				.addAnnotatedClass(bo.CatchingStats.class)
 				.addAnnotatedClass(bo.FieldingStats.class)
 				.addAnnotatedClass(bo.PitchingStats.class)
-				.addAnnotatedClass(bo.TeamSeason.class)
-				.addAnnotatedClass(bo.Team.class)
 				.configure();
-			StandardServiceRegistryBuilder builderP = new StandardServiceRegistryBuilder().
+			StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder().
 			applySettings(cfg.getProperties());
-			sessionFactoryP = cfg.buildSessionFactory(builderP.build());
-			
+			sessionFactory = cfg.buildSessionFactory(builder.build());
 		} catch (Throwable ex) {
-			System.err.println("Initial SessionFactoryPlayer creation failed." + ex);
-			ex.printStackTrace();
+			System.err.println("Initial SessionFactory creation failed." + ex);
 			throw new ExceptionInInitializerError(ex);
-			
 		}
 	}
 
-	
-	static {
-		try {	
-			Configuration cfgT = new Configuration()
-					.addAnnotatedClass(bo.Team.class)
-					.addAnnotatedClass(bo.TeamSeason.class)
-					.configure();
-				StandardServiceRegistryBuilder builderT = new StandardServiceRegistryBuilder().
-				applySettings(cfgT.getProperties());
-			sessionFactoryT = cfgT.buildSessionFactory(builderT.build());
-			
-		} catch (Throwable ex) {
-			System.err.println("Initial SessionFactoryTeam creation failed." + ex);
-			throw new ExceptionInInitializerError(ex);
-		}
-
-	}
-	
-	
 	public static SessionFactory getSessionFactory() {
-		return sessionFactoryP;
-	}
-	
-	public static SessionFactory getSessionFactoryT() {
-		return sessionFactoryT;
+		return sessionFactory;
 	}
   
   public static void stopConnectionProvider() {
-    final SessionFactoryImplementor sessionFactoryImplementor = (SessionFactoryImplementor) sessionFactoryP;
+    final SessionFactoryImplementor sessionFactoryImplementor = (SessionFactoryImplementor) sessionFactory;
     ConnectionProvider connectionProvider = sessionFactoryImplementor.getConnectionProvider();
     if (Stoppable.class.isInstance(connectionProvider)) {
         ((Stoppable) connectionProvider).stop();
@@ -92,7 +64,7 @@ public class HibernateUtil {
 		    query.setParameter("id", id);
 		    if (query.list().size()>0) {
 		    	p = (Player) query.list().get(0);
-		    	Hibernate.initialize(p.getSeasons());
+		    	Hibernate.initialize(p.getTeamSeasons());
 		    }
 			tx.commit();
 		} catch (Exception e) {
@@ -129,20 +101,13 @@ public class HibernateUtil {
 		}
 		return list;
 	}
-
-	//TODO 
-	public static Player retrieveTeamById(Integer id){
-		
-	}
-
-	//TODO public static List<Team> retrieveTeamByName(String nameQuery, Boolean exactMatch)
 	
 	public static boolean persistPlayer(Player p) {
 		Session session = HibernateUtil.getSessionFactory().openSession();
 		Transaction tx = session.getTransaction();
 		try {
 			tx.begin();
-			session.save(p);
+			session.saveOrUpdate(p);
 			tx.commit();
 		} catch (Exception e) {
 			tx.rollback();
@@ -155,7 +120,7 @@ public class HibernateUtil {
 	}
 	
 	public static boolean persistTeam(Team t) {
-		Session session = HibernateUtil.getSessionFactoryT().openSession();
+		Session session = HibernateUtil.getSessionFactory().openSession();
 		Transaction tx = session.getTransaction();
 		try {
 			tx.begin();
@@ -170,5 +135,75 @@ public class HibernateUtil {
 		}
 		return true;
 	}
-		
+
+	@SuppressWarnings("unchecked")
+	public static List<Team> retrieveTeamsByName(String nameQuery, Boolean exactMatch) {
+        List<Team> list=null;
+		Session session = HibernateUtil.getSessionFactory().openSession();
+		Transaction tx = session.getTransaction();
+		try {
+			tx.begin();
+			org.hibernate.Query query;
+			if (exactMatch) {
+				query = session.createQuery("from bo.Team where name = :name ");
+			} else {
+				query = session.createQuery("from bo.Team where name like '%' + :name + '%' ");
+			}
+		    query.setParameter("name", nameQuery);
+		    list = query.list();
+			tx.commit();
+		} catch (Exception e) {
+			tx.rollback();
+			e.printStackTrace();
+		} finally {
+			if (session.isOpen()) session.close();
+		}
+		return list;
+	}
+
+	public static Team retrieveTeamById(Integer id) {
+        Team t =null;
+		Session session = HibernateUtil.getSessionFactory().openSession();
+		Transaction tx = session.getTransaction();
+		try {
+			tx.begin();
+			org.hibernate.Query query;
+			query = session.createQuery("from bo.Team where id = :id ");
+		    query.setParameter("id", id);
+		    if (query.list().size()>0) t = (Team) query.list().get(0);
+			tx.commit();
+		} catch (Exception e) {
+			tx.rollback();
+			e.printStackTrace();
+		} finally {
+			if (session.isOpen()) session.close();
+		}
+		return t;
+	}	
+	
+	public static TeamSeason retrieveTeamSeasonById(Integer teamId, Integer year) {
+        TeamSeason ts =null;
+		Session session = HibernateUtil.getSessionFactory().openSession();
+		Transaction tx = session.getTransaction();
+		try {
+			tx.begin();
+			org.hibernate.Query query;
+			query = session.createQuery("from bo.TeamSeason where teamId = :teamId and year = :year ");
+		    query.setParameter("teamId", teamId);
+		    query.setParameter("year", year);
+		    if (query.list().size()>0) {
+		    	ts = (TeamSeason) query.list().get(0);
+		    	Hibernate.initialize(ts.getPlayers());
+		    	//Hibernate.initialize(ts.getTeam());
+		    }
+			tx.commit();
+		} catch (Exception e) {
+			tx.rollback();
+			e.printStackTrace();
+		} finally {
+			if (session.isOpen()) session.close();
+		}
+		return ts;
+	}
+	
 }

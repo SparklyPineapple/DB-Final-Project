@@ -37,8 +37,7 @@ public class Player {
 	Set<PlayerSeason> seasons = new HashSet<PlayerSeason>();
 	
 	@ManyToMany(fetch = FetchType.LAZY, mappedBy = "players")
-    Set<TeamSeason> teamSeasons = new HashSet<TeamSeason>();
-	
+	Set<TeamSeason> teamSeasons = new HashSet<TeamSeason>();
 	
 	@Column
 	String name;
@@ -56,18 +55,12 @@ public class Player {
 	String birthCity;
 	@Column
 	String birthState;
-    @Column
+  @Column
 	String birthCountry;
 	@Column
 	Date firstGame;
 	@Column
 	Date lastGame;
-	
-	
-	
-	public void addTeamSeason(TeamSeason s) {
-		teamSeasons.add(s);
-	}	
 
 	// utility function
 	public PlayerSeason getPlayerSeason(Integer year) {
@@ -75,6 +68,18 @@ public class Player {
 			if (ps.getYear().equals(year)) return ps;
 		}
 		return null;
+	}
+	
+	public Set<TeamSeason> getTeamSeasons() {
+		return teamSeasons;
+	}
+	
+	public void setTeamSeasons(Set<TeamSeason> teamSeasons) {
+		this.teamSeasons = teamSeasons;
+	}
+	
+	public void addTeamSeason(TeamSeason ts) {
+		this.teamSeasons.add(ts);
 	}
 	
 	public void addPosition(String p) {
@@ -157,7 +162,7 @@ public class Player {
 	}
   
   public String getBirthCountry() {
-		return this.birthCountry;
+		return birthCountry;
 	}
 
 	public void setBirthCountry(String birthCountry) {

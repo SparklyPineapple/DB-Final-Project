@@ -14,6 +14,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 
 import org.hibernate.annotations.Fetch;
@@ -35,6 +36,10 @@ public class Player {
 	@Fetch(FetchMode.JOIN)
 	Set<PlayerSeason> seasons = new HashSet<PlayerSeason>();
 	
+	@ManyToMany(fetch = FetchType.LAZY, mappedBy = "players")
+    Set<TeamSeason> teamSeasons = new HashSet<TeamSeason>();
+	
+	
 	@Column
 	String name;
 	@Column
@@ -51,14 +56,14 @@ public class Player {
 	String birthCity;
 	@Column
 	String birthState;
-  @Column
+    @Column
 	String birthCountry;
 	@Column
 	Date firstGame;
 	@Column
 	Date lastGame;
 	
-	private Set<TeamSeason> teamSeasons;
+	
 	
 	public void addTeamSeason(TeamSeason s) {
 		teamSeasons.add(s);

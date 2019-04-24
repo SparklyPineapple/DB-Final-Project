@@ -52,15 +52,15 @@ public class TeamSeason implements Serializable {
 		}
 		
 		@Column
-		int gamesPlayed;
+		Integer gamesPlayed;
 		@Column
-		int wins;
+		Integer wins;
 		@Column
-		int losses;
+		Integer losses;
 		@Column
-		int rank;
+		Integer rank;
 		@Column
-		int totalAttendance;
+		Integer totalAttendance;
 			
 		
 		
@@ -129,7 +129,7 @@ public class TeamSeason implements Serializable {
 			return gamesPlayed;
 		}
 
-		public void setGamesPlayed(int gamesPlayed) {
+		public void setGamesPlayed(Integer gamesPlayed) {
 			this.gamesPlayed = gamesPlayed;
 		}
 
@@ -137,7 +137,7 @@ public class TeamSeason implements Serializable {
 			return wins;
 		}
 
-		public void setWins(int wins) {
+		public void setWins(Integer wins) {
 			this.wins = wins;
 		}
 
@@ -145,7 +145,7 @@ public class TeamSeason implements Serializable {
 			return losses;
 		}
 
-		public void setLosses(int losses) {
+		public void setLosses(Integer losses) {
 			this.losses = losses;
 		}		
 		
@@ -153,7 +153,7 @@ public class TeamSeason implements Serializable {
 			return rank;
 		}
 
-		public void setRank(int rank) {
+		public void setRank(Integer rank) {
 			this.rank = rank;
 		}
 		
@@ -161,7 +161,7 @@ public class TeamSeason implements Serializable {
 			return totalAttendance;
 		}
 
-		public void setTotalAttendance(int totalAttendance) {
+		public void setTotalAttendance(Integer totalAttendance) {
 			this.totalAttendance = totalAttendance;
 		}
 		

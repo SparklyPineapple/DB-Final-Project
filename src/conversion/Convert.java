@@ -24,7 +24,7 @@ import dataaccesslayer.HibernateUtil;
 public class Convert {
 
 	static Connection conn;
-	static final String MYSQL_CONN_URL = "jdbc:mysql://163.11.237.163:3306/mlb?"
+	static final String MYSQL_CONN_URL = "jdbc:mysql://163.11.239.17:3306/mlb?"
 			+ "verifyServerCertificate=false&useSSL=true&" // PPD
 			+ "user=seth&password=seth";
 
@@ -52,37 +52,182 @@ public class Convert {
 	}
 
 	public static void convertAll() {
+		System.out.println("convert All");
 
 		ArrayList<Team> teamList = new ArrayList<Team>();
 		ArrayList<TeamSeason> teamSeasonList = new ArrayList<TeamSeason>();
-
-		// addTeams
-		// addTeamSeasons
+		
+		convertTeams(teamList, teamSeasonList);
 
 		teamSeasonList = convertPlayers(teamSeasonList);
 
 		// LOOP and persist all teams in teamList
 		for (Team t : teamList) {
+			System.out.println("in loop");
 			HibernateUtil.persistTeam(t);
 		}
 
 	}
+	public static void makeTeamSeasonsForThisTeam(Team t, String tID_str, ArrayList<TeamSeason> TeamSeasonList) {
+		try {
+			PreparedStatement ps = conn.prepareStatement("CALL getRelevantTeamData( ? );"); //TODO stored Procedure change
+			ps.setString(1, tID_str);
+			ResultSet rs = ps.executeQuery();
+			TeamSeason ts;
+						
+			
+			String gamesPlayed_str, wins_str, losses_str, rank_str, totalAttendance_str, yearID_str;
+			totalAttendance_str="";
+			Integer yearID;
+			while(rs.next()) {
+				
+				//Make a new TeamSeason based on year
+				yearID_str = rs.getString("yearID");
+				if(yearID_str != null) {
+					yearID = Integer.parseInt(yearID_str);
+				}else {
+					yearID = 0;
+				}
+				ts = new TeamSeason(t, yearID);
+				
+				//retrieve remaining attributes adjusting as necessary and then initialize
+				gamesPlayed_str = rs.getString("G");
+				wins_str = rs.getString("W");
+				losses_str = rs.getString("L");
+				rank_str = rs.getString("Rank");
+				totalAttendance_str = rs.getString("attendance");
+				
+				if(gamesPlayed_str == null || gamesPlayed_str.isEmpty()) {
+					ts.setGamesPlayed(0);
+				}else {
+					ts.setGamesPlayed(Integer.parseInt(gamesPlayed_str));
+				}
+				
+				if(wins_str == null || wins_str.isEmpty()) {
+					ts.setWins(0);
+				}else {
+					ts.setWins(Integer.parseInt(wins_str));
+				}
+				
+				if(losses_str == null || losses_str.isEmpty()) {
+					ts.setLosses(0);
+				}else {
+					ts.setLosses(Integer.parseInt(losses_str));
+				}
+				
+				if(rank_str == null || rank_str.isEmpty()) {
+					ts.setRank(0);
+				}else {
+					ts.setRank(Integer.parseInt(rank_str));
+				}
+				
+				if(totalAttendance_str == null || totalAttendance_str.isEmpty()) {
+					ts.setTotalAttendance(0);
+				}else {
+					ts.setTotalAttendance(Integer.parseInt(totalAttendance_str));	
+				}
+				
+				// add to arrayList
+				TeamSeasonList.add(ts);
+				
+				
+			}
+			
+			rs.close();
+			ps.close();
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public static Team makeTeam(String teamIDStr) {
+		try {
+			PreparedStatement ps = conn.prepareStatement("CALL getRelevantTeamData( ? );");
+			ps.setString(1, teamIDStr);
+			ResultSet rs = ps.executeQuery();
+			Team t = new Team();
+			
+			//string team ID -> integer teamID
+			String interimSTR = "";
+			char c;
+			int asciiC;
+			for(int i = 0; i< teamIDStr.length(); i++) {
+				c = teamIDStr.charAt(i);
+				asciiC = c;
+				interimSTR= interimSTR+asciiC;
+			}
+			t.setId(Integer.parseInt(interimSTR));
+			
+			//initialize with erroneous data to insure something is set
+			t.setYearFounded(999999);
+			t.setYearLast(-1);
+			String teamName, league, yearIDStr;
+			Integer yearID;
+			while(rs.next()) {//all the rest of the attributes are time dependent
+				yearIDStr = rs.getString("yearID");
+				yearID = Integer.parseInt(yearIDStr);
+				if(yearID>t.getYearLast()) { //currently the most recent data
+					t.setYearLast(yearID);
+					teamName = rs.getString("name");
+					league = rs.getString("lgID");
+					t.setName(teamName);
+					t.setLeague(league);
+				}
+				if(yearID<t.getYearFounded()) {
+					t.setYearFounded(yearID);
+				}
+			}
+			
+			rs.close();
+			ps.close();
+			return t;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public static void convertTeams(ArrayList<Team> teamList, ArrayList<TeamSeason> teamSeasonList) {
+		// Get a list of all team ID's
+		try {
+			PreparedStatement ps = conn.prepareStatement("CALL getTeamIDs();");
+			ResultSet rs = ps.executeQuery();
+			int teamCount = 0;
+			String teamIDStr;
+			Team t;
+			while (rs.next()) {//for each team, make a team object and all TeamSeasons Objects for that 
+				teamCount++;
+				if (teamCount % 10 == 0) System.out.println("num players: " + teamCount);
+				
+				teamIDStr = rs.getString("teamID");
+				t = makeTeam(teamIDStr);
+				teamList.add(t);
+				makeTeamSeasonsForThisTeam(t, teamIDStr, teamSeasonList);
+
+			}
+			rs.close();
+			ps.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
 
 	public static ArrayList<TeamSeason> convertPlayers(ArrayList<TeamSeason> teamSeasonList) {
-		
-		//////////////////////////////////////////////// PLAYER///////////////////////////
 		try {
 			PreparedStatement ps = conn.prepareStatement("select " + "playerID, " + "nameFirst, " + "nameLast, "
 					+ "nameGiven, " + "birthDay, " + "birthMonth, " + "birthYear, " + "deathDay, " + "deathMonth, "
 					+ "deathYear, " + "bats, " + "throws, " + "birthCity, " + "birthState, " + "birthCountry, "
 					+ "debut, " + "finalGame " +
-					// "from Master");
+					 "from Master");
 					// for debugging comment previous line, uncomment next line
-					"from Master where playerID = 'bondsba01' or playerID = 'youklke01';");
+					//"from Master where playerID = 'bondsba01' or playerID = 'youklke01';");
 			ResultSet rs = ps.executeQuery();
 			int count = 0; // for progress feedback only
 
-			// while loop begins: GO THROUGH EACH PERSON TUPLE//
 			while (rs.next()) {
 				count++;
 				// this just gives us some progress feedback
@@ -155,15 +300,7 @@ public class Convert {
 				
 				
 				//attach players to teamSeason and teamSeason to players where they correspond
-				for (PlayerSeason pls : p.getSeasons()) {
-					for (TeamSeason ts: teamSeasonList) {
-						if (pls.getYear() == ts.getYear()) {
-							p.addTeamSeason(ts); //add TeamSeason to the players list
-							ts.addPlayers(p);
-						}
-					}
-				}
-				
+				makeTeamSeasonAssociationsWithPlayer(pid, p, teamSeasonList);
 				
 				// we can now persist player, and the seasons and stats will cascade
 				HibernateUtil.persistPlayer(p); // persist indivdual player
@@ -178,10 +315,58 @@ public class Convert {
 		e.printStackTrace();
 	}
 
-	/////////// END
-	/////////// PLAYER///////////////////////////////////////////////////////////////////////////////////////////
-
 	return teamSeasonList;
+	}
+	
+	private static TeamSeason findTimeSeason(ArrayList<TeamSeason> teamSeasonList, Integer yearID, String teamID_str) {
+		int teamID = teamStr2Int(teamID_str);
+		for (TeamSeason ts: teamSeasonList) {
+		if (ts.getYear() == yearID && ts.getTeam().getId() == teamID) { 
+				return ts;
+			}
+		}
+		return null;
+	}
+	
+	private static void makeTeamSeasonAssociationsWithPlayer(String pid, Player p, ArrayList<TeamSeason> teamSeasonList) {
+		try {
+			//get all team season data associated with this player
+			PreparedStatement ps = conn
+					.prepareStatement("CALL getTeamSeasonsOfPlayer(?);");
+			ps.setString(1, pid);
+			ResultSet rs = ps.executeQuery();
+			String yearID_s, teamID_s;
+			int yearID;
+			TeamSeason ts;
+			while(rs.next()) {
+				yearID_s = rs.getString("yearID");
+				teamID_s = rs.getString("teamID");
+				yearID = Integer.parseInt(yearID_s);
+				ts = findTimeSeason(teamSeasonList, yearID, teamID_s);
+				if(ts != null && p!= null) {
+					p.addTeamSeason(ts);
+					ts.addPlayers(p);
+				}
+			}
+			
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
+
+	
+	private static int teamStr2Int(String teamIDStr) {
+		String interimSTR = "";
+		char c;
+		int asciiC;
+		for(int i = 0; i< teamIDStr.length(); i++) {
+			c = teamIDStr.charAt(i);
+			asciiC = c;
+			interimSTR= interimSTR+asciiC;
+		}
+		return Integer.parseInt(interimSTR);
 	}
 
 	private static java.util.Date convertIntsToDate(int year, int month, int day) {

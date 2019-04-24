@@ -18,10 +18,12 @@ import bo.Team;
 
 public class HibernateUtil {
 
-	private static final SessionFactory sessionFactory;
+	private static final SessionFactory sessionFactoryP, sessionFactoryT;
 
 	static {
 		try {
+			System.out.println("player configuration");
+			
 			Configuration cfg = new Configuration()
 				.addAnnotatedClass(bo.Player.class)
 				.addAnnotatedClass(bo.PlayerSeason.class)
@@ -29,22 +31,50 @@ public class HibernateUtil {
 				.addAnnotatedClass(bo.CatchingStats.class)
 				.addAnnotatedClass(bo.FieldingStats.class)
 				.addAnnotatedClass(bo.PitchingStats.class)
+				.addAnnotatedClass(bo.TeamSeason.class)
+				.addAnnotatedClass(bo.Team.class)
 				.configure();
-			StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder().
+			StandardServiceRegistryBuilder builderP = new StandardServiceRegistryBuilder().
 			applySettings(cfg.getProperties());
-			sessionFactory = cfg.buildSessionFactory(builder.build());
+			sessionFactoryP = cfg.buildSessionFactory(builderP.build());
+			
 		} catch (Throwable ex) {
-			System.err.println("Initial SessionFactory creation failed." + ex);
+			System.err.println("Initial SessionFactoryPlayer creation failed." + ex);
+			ex.printStackTrace();
 			throw new ExceptionInInitializerError(ex);
+			
 		}
 	}
 
+	
+	static {
+		try {	
+			Configuration cfgT = new Configuration()
+					.addAnnotatedClass(bo.Team.class)
+					.addAnnotatedClass(bo.TeamSeason.class)
+					.configure();
+				StandardServiceRegistryBuilder builderT = new StandardServiceRegistryBuilder().
+				applySettings(cfgT.getProperties());
+			sessionFactoryT = cfgT.buildSessionFactory(builderT.build());
+			
+		} catch (Throwable ex) {
+			System.err.println("Initial SessionFactoryTeam creation failed." + ex);
+			throw new ExceptionInInitializerError(ex);
+		}
+
+	}
+	
+	
 	public static SessionFactory getSessionFactory() {
-		return sessionFactory;
+		return sessionFactoryP;
+	}
+	
+	public static SessionFactory getSessionFactoryT() {
+		return sessionFactoryT;
 	}
   
   public static void stopConnectionProvider() {
-    final SessionFactoryImplementor sessionFactoryImplementor = (SessionFactoryImplementor) sessionFactory;
+    final SessionFactoryImplementor sessionFactoryImplementor = (SessionFactoryImplementor) sessionFactoryP;
     ConnectionProvider connectionProvider = sessionFactoryImplementor.getConnectionProvider();
     if (Stoppable.class.isInstance(connectionProvider)) {
         ((Stoppable) connectionProvider).stop();
@@ -118,7 +148,7 @@ public class HibernateUtil {
 	}
 	
 	public static boolean persistTeam(Team t) {
-		Session session = HibernateUtil.getSessionFactory().openSession();
+		Session session = HibernateUtil.getSessionFactoryT().openSession();
 		Transaction tx = session.getTransaction();
 		try {
 			tx.begin();
